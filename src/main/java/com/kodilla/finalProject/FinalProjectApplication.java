@@ -1,13 +1,14 @@
-package com.example.demo;
+package com.kodilla.finalProject;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ProjectApplication {
+public class FinalProjectApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(ProjectApplication.class, args);
+
+		SpringApplication.run(FinalProjectApplication.class, args);
 	}
 
 }

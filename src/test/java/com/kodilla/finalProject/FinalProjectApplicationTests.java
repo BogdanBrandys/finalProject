@@ -1,10 +1,10 @@
-package com.example.demo;
+package com.kodilla.finalProject;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class ProjectApplicationTests {
+class FinalProjectApplicationTests {
 
 	@Test
 	void contextLoads() {
