@@ -13,7 +13,7 @@ import java.util.List;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
     @Column(nullable = false, length = 50)
     private String first_name;
     @Column(nullable = false, length = 50)
@@ -34,6 +34,9 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "movie_id")
     )
     private List<Movie> favoriteMovies;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserMovie> userMovies;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

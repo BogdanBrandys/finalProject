@@ -4,11 +4,12 @@ import org.springframework.context.ApplicationEvent;
 
 import java.time.LocalDateTime;
 
+
 public class UserActionEvent extends ApplicationEvent {
-    private final Long userId;      // ID użytkownika
-    private final String userEmail; // Email użytkownika
-    private final ActionType action; // Typ akcji
-    private final LocalDateTime timestamp; // Czas zdarzenia
+    private final Long userId;
+    private final String userEmail;
+    private final ActionType action;
+    private final LocalDateTime timestamp;
 
     public UserActionEvent(Object source, Long userId, String userEmail, ActionType action) {
         super(source);

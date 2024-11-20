@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/v1/admin")
 @RequiredArgsConstructor
 public class AdminController {
 
@@ -48,7 +48,7 @@ public class AdminController {
             summary = "Create user"
     )
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/users")
+    @PostMapping("/users/create")
     public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDTO){
         User user = userMapper.mapUserDtoToUser(userDTO);
         User savedUser = userService.createUser(user);

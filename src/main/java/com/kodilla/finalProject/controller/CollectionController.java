@@ -48,7 +48,7 @@ public class CollectionController {
             summary = "Get selected movie"
     )
     @PreAuthorize("hasRole('USER')")
-    @GetMapping(value ="/user/{movieId}", produces = MediaType.APPLICATION_JSON_VALUE,
+    @GetMapping(value ="/{movieId}", produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<MovieDTO> getMovie(@PathVariable Long movieId) throws MovieNotFoundException {
         return ResponseEntity.ok(movieMapper.mapToMovieDTO(dbService.getMovieFromFavourites(movieId)));
@@ -59,7 +59,7 @@ public class CollectionController {
             summary = "Delete selected movie"
     )
     @PreAuthorize("hasRole('USER')")
-    @DeleteMapping(value ="/user/{movieId}", produces = MediaType.APPLICATION_JSON_VALUE,
+    @DeleteMapping(value ="/{movieId}", produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> deleteMovie(@PathVariable Long movieId) throws MovieNotFoundException {
         boolean isDeleted = dbService.deleteMovieFromFavourites(movieId);
@@ -75,7 +75,7 @@ public class CollectionController {
             summary = "Create a movie and add to user's list"
     )
     @PreAuthorize("hasRole('USER')")
-    @PostMapping(value = "/user/add", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/add", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<MovieDTO> addMovie(@RequestBody MovieBasicDTO movieBasicDTO) throws MovieExistsException {
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();

@@ -70,6 +70,6 @@ public class JwtFilter extends OncePerRequestFilter {
     private boolean isPublicPage(HttpServletRequest request) {
         // Sprawdzanie, czy żądana ścieżka jest publiczna
         String path = request.getRequestURI();
-        return path.equals("/") || path.equals("/login") || path.equals("/register") || path.startsWith("/actuator/");
+        return path.equals("/") || path.equals("/v1/login") || path.equals("/register") || path.startsWith("/actuator/");
     }
 }

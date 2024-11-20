@@ -22,6 +22,4 @@ public class PhysicalVersion {
     private Boolean steelbook;
     private String details;
 
-    @OneToOne(mappedBy = "physicalVersion")
-    private Movie movie;
 }

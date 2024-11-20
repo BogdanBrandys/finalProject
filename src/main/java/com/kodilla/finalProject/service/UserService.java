@@ -2,10 +2,13 @@ package com.kodilla.finalProject.service;
 
 import com.kodilla.finalProject.domain.*;
 import com.kodilla.finalProject.errorHandling.*;
+import com.kodilla.finalProject.event.ActionType;
 import com.kodilla.finalProject.mapper.UserMapper;
 import com.kodilla.finalProject.repository.RoleRepository;
+import com.kodilla.finalProject.repository.UserMovieRepository;
 import com.kodilla.finalProject.repository.UserRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +25,7 @@ public class UserService {
     private final RoleRepository roleRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final UserActionService userActionService;
 
     public User registerUser(User user) throws UsernameExistsException, EmailExistsException {
         //check exceptions
@@ -35,7 +39,6 @@ public class UserService {
                 .map(role -> roleRepository.findByName(role.getName().name())
                         .orElseThrow(() -> new RoleWithNameNotFoundException(role.getName().name())))
                 .collect(Collectors.toList());
-
         //create user
         // Set roles for user
         user.setRoles(roles);
@@ -44,9 +47,10 @@ public class UserService {
         user.setPassword(encodedPassword);
         //Set status
         user.setStatus(User.UserStatus.ACTIVE);
-
+        userActionService.publishUserActionEvent(user, ActionType.REGISTER_USER);
         return userRepository.save(user);
     }
+
     public User createUser(User user) throws RoleWithNameNotFoundException { //Admin purposes
         List<Role> roles = user.getRoles().stream()
                 .map(role -> roleRepository.findByName(role.getName().name())
@@ -68,8 +72,10 @@ public class UserService {
             throw new MovieInUsersListException(movie.getDetails().getTitle());
         }
         user.getFavoriteMovies().add(movie);
+        userActionService.publishUserActionEvent(user, ActionType.ADD_TO_FAVORITES);
         userRepository.save(user);
     }
+
     public void updateUserStatus(Long userId, User.UserStatus userStatus) throws UserWithNameNotFoundException {
         // searching for user
         Optional<User> optionalUser = userRepository.findById(userId);
@@ -84,6 +90,7 @@ public class UserService {
         user.setStatus(userStatus);
         userRepository.save(user);
     }
+
     public User updateUser(Long userId, UserDTO userDTO) throws UserWithNameNotFoundException, RoleWithNameNotFoundException {
 
         Optional<User> optionalUser = userRepository.findById(userId);
@@ -94,26 +101,42 @@ public class UserService {
 
         User user = optionalUser.get();
 
+        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new UserWithNameNotFoundException(currentUsername));
+
+        boolean isAdmin = currentUser.getRoles().stream()
+                .anyMatch(role -> role.getName().equals(Role.RoleName.ADMIN));
+
+        if (!isAdmin) {
+            // when user is not Admin
+            userDTO.setRoles(null);
+            userDTO.setStatus(null);
+        }
+
         user.setUsername(userDTO.getUsername());
         user.setEmail(userDTO.getEmail());
         user.setFirst_name(userDTO.getFirst_name());
         user.setLast_name(userDTO.getLast_name());
 
-        // changing role
-        List<Role> roles = userDTO.getRoles().stream()
-                .map(role -> roleRepository.findByName(role.getName().name())
-                        .orElseThrow(() -> new RoleWithNameNotFoundException(role.getName().name())))
-                .collect(Collectors.toList());
-        user.setRoles(roles);
+        if (isAdmin && userDTO.getRoles() != null && !userDTO.getRoles().isEmpty()) {
+            List<Role> roles = userDTO.getRoles().stream()
+                    .map(role -> roleRepository.findByName(role.getName().name())
+                            .orElseThrow(() -> new RoleWithNameNotFoundException(role.getName().name())))
+                    .collect(Collectors.toList());
+            user.setRoles(roles);
+        }
 
-        //changing status
-        if (userDTO.getStatus() != null) {
+        if (isAdmin && userDTO.getStatus() != null) {
             user.setStatus(userDTO.getStatus());
         }
 
+        userActionService.publishUserActionEvent(user, ActionType.UPDATE_PROFILE);
+
         return userRepository.save(user);
     }
-    public List<UserDTO> getAllUsers(){
+
+    public List<UserDTO> getAllUsers() {
         List<User> users = userRepository.findAll();
         return userMapper.mapUserListToUserDTOList(users);
     }
@@ -128,13 +151,18 @@ public class UserService {
     }
 
     public boolean deleteUserById(final Long userId) throws UserWithIdNotFoundException {
-        if (userRepository.existsById(userId)) {
-            userRepository.deleteById(userId);
-            return true;
-        } else {
-            return false;
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (userOptional.isEmpty()) {
+            throw new UserWithIdNotFoundException(userId);
         }
-    }
+        User user = userOptional.get();
+
+        userRepository.deleteById(userId);
+
+        userActionService.publishUserActionEvent(user, ActionType.DELETE_PROFILE);
+
+    return true;
+}
     public MovieCollectionStatsDTO getCollectionStats(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserWithIdNotFoundException(userId));
@@ -169,6 +197,8 @@ public class UserService {
                 .map(movie -> movie.getDetails().getYear())
                 .filter(Objects::nonNull)
                 .max(Comparator.naturalOrder());
+
+        userActionService.publishUserActionEvent(user, ActionType.GET_COLLECTION_STATS);
 
         return new MovieCollectionStatsDTO(
                 totalMovies,

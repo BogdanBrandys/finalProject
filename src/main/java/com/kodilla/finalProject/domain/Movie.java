@@ -24,7 +24,4 @@ public class Movie {
         @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
         private List<MovieProvider> providers;
 
-        @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-        @JoinColumn(name = "physical_version_id")
-        private PhysicalVersion physicalVersion;
 }
