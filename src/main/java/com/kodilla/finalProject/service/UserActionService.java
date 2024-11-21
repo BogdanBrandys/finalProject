@@ -4,7 +4,6 @@ import com.kodilla.finalProject.domain.User;
 import com.kodilla.finalProject.event.ActionType;
 import com.kodilla.finalProject.event.UserActionEvent;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
