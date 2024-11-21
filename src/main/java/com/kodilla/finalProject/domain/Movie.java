@@ -14,7 +14,7 @@ import java.util.List;
 public class Movie {
         @Id
         @GeneratedValue
-        private Long movie_id;
+        private Long id;
         private Long tmdbId;
         //omdb data
         @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)

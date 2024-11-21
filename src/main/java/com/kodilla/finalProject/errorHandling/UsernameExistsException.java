@@ -4,9 +4,10 @@ import lombok.Getter;
 
 @Getter
 public class UsernameExistsException extends Exception {
-    private String username;
+    private final String username;
 
     public UsernameExistsException(String username) {
         super("Username " + username + " already exists.");
+        this.username = username;
     }
 }

@@ -3,6 +3,7 @@ package com.kodilla.finalProject.security;
 import com.kodilla.finalProject.errorHandling.InvalidTokenException;
 import com.kodilla.finalProject.errorHandling.TokenExpiredException;
 import com.kodilla.finalProject.errorHandling.TokenFormatException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -41,16 +42,18 @@ public class JwtUtility {
                     .parseClaimsJws(token)
                     .getBody();
             return claims.getSubject();
-        } catch (InvalidTokenException e) {
-            throw new InvalidTokenException(e.getMessage());
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new InvalidTokenException("Invalid token format or token has expired");
         }
     }
 
     public boolean isTokenValid(String token, String username) {
         try {
             return username.equals(extractUsername(token)) && !isTokenExpired(token);
+        } catch (InvalidTokenException e) {
+            throw new InvalidTokenException("Token is invalid or expired");
         } catch (RuntimeException e) {
-            throw new InvalidTokenException(e.getMessage());
+            throw new RuntimeException("Unexpected error while validating token", e);
         }
     }
 
@@ -63,16 +66,16 @@ public class JwtUtility {
                     .getBody()
                     .getExpiration();
             if (expiration.before(new Date())) {
-                throw new TokenExpiredException();
+                throw new TokenExpiredException("Token has expired");
             }
             return false;
-        } catch (InvalidTokenException e) {
-            throw new InvalidTokenException(e.getMessage());
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new InvalidTokenException("Token parsing failed or token is invalid");
         }
     }
     public void validateTokenFormat(String token) {
-        if (token == null || !token.startsWith("Bearer ")) {
-            throw new TokenFormatException();
+        if (token == null || token.trim().isEmpty()) {
+            throw new TokenFormatException("Token cannot be null or empty");
         }
     }
 }

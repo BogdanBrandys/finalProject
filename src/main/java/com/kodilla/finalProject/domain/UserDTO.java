@@ -12,6 +12,6 @@ public class UserDTO {
     private String last_name;
     private String email;
     private String username;
-    private User.UserStatus status;
+    private String password;
     private List<RoleDTO> roles;
 }

@@ -6,6 +6,7 @@ import com.kodilla.finalProject.errorHandling.MovieNotFoundException;
 import com.kodilla.finalProject.errorHandling.UserWithNameNotFoundException;
 import com.kodilla.finalProject.mapper.CollectionMapper;
 import com.kodilla.finalProject.repository.UserRepository;
+import com.kodilla.finalProject.service.CollectionService;
 import com.kodilla.finalProject.service.DbService;
 import com.kodilla.finalProject.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,10 +27,9 @@ import java.util.List;
 @Tag(name = "Movies", description = "Managing movies")
 public class CollectionController {
     private final DbService dbService;
-    private final UserService userService;
+    private final CollectionService collectionService;
     private final CollectionMapper movieMapper;
     private final UserRepository userRepository;
-
 
     @Operation(
             description = "Get all movies from user's list",
@@ -39,7 +39,7 @@ public class CollectionController {
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE,
     consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<MovieDTO>> getMovies() {
-        List<Movie> movies = dbService.getAllMoviesFromFavourites();
+        List<Movie> movies = collectionService.getAllMoviesFromFavourites();
         return ResponseEntity.ok(movieMapper.mapToMovieList(movies));
     }
 
@@ -51,7 +51,7 @@ public class CollectionController {
     @GetMapping(value ="/{movieId}", produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<MovieDTO> getMovie(@PathVariable Long movieId) throws MovieNotFoundException {
-        return ResponseEntity.ok(movieMapper.mapToMovieDTO(dbService.getMovieFromFavourites(movieId)));
+        return ResponseEntity.ok(movieMapper.mapToMovieDTO(collectionService.getMovieFromFavourites(movieId)));
     }
 
     @Operation(
@@ -62,7 +62,7 @@ public class CollectionController {
     @DeleteMapping(value ="/{movieId}", produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> deleteMovie(@PathVariable Long movieId) throws MovieNotFoundException {
-        boolean isDeleted = dbService.deleteMovieFromFavourites(movieId);
+        boolean isDeleted = collectionService.deleteMovieFromFavourites(movieId);
         if (isDeleted) {
             return ResponseEntity.noContent().build();
         } else {
@@ -85,7 +85,7 @@ public class CollectionController {
 
         Movie movie = dbService.findOrCreateMovie(movieBasicDTO);
 
-        userService.addMovieToUserFavorites(movie, user);
+        collectionService.addMovieToUserFavorites(movie, user);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(movieMapper.mapToMovieDTO(movie));
     }
@@ -97,7 +97,7 @@ public class CollectionController {
     @PreAuthorize("hasRole('USER')")
     @GetMapping(value = "/{userId}/stats", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<MovieCollectionStatsDTO> getUserMovieStats(@PathVariable Long userId) {
-        MovieCollectionStatsDTO stats = userService.getCollectionStats(userId);
+        MovieCollectionStatsDTO stats = collectionService.getCollectionStats(userId);
         return ResponseEntity.ok(stats);
     }
 

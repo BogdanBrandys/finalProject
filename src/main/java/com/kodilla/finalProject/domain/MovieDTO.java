@@ -12,5 +12,4 @@ public class MovieDTO {
     private Long tmdbId;
     private MovieDetailsDTO details;
     private GroupedProvidersDTO providers;
-    private PhysicalVersion physicalVersion;
 }

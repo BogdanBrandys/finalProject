@@ -15,20 +15,26 @@ public class UserMapper {
                 .last_name(userDto.getLast_name())
                 .email(userDto.getEmail())
                 .username(userDto.getUsername())
-                .status(userDto.getStatus())
-                .roles(userDto.getRoles().stream().map(this::roleDTOToRole)
-                .collect(Collectors.toList()))
+                .password(userDto.getPassword())
+                .status(User.UserStatus.ACTIVE)
+                .roles(userDto.getRoles().stream()
+                        .map(roleDTO -> roleDTOToRole(roleDTO))
+                        .collect(Collectors.toList()))
+                .favoriteMovies(new ArrayList<>())
+                .userMovies(new ArrayList<>())
                 .build();
     }
     public UserDTO mapUserToUserDto(User user) {
-        return new UserDTO(user.getFirst_name(),
+        return new UserDTO(
+                user.getFirst_name(),
                 user.getLast_name(),
                 user.getEmail(),
                 user.getUsername(),
-                user.getStatus(),
+                user.getPassword(),
                 user.getRoles().stream()
                         .map(this::roleToRoleDTO)
-                        .collect(Collectors.toList()));
+                        .collect(Collectors.toList())
+        );
     }
     public Role roleDTOToRole(RoleDTO roleDTO) {
         return new Role(null, roleDTO.getName());

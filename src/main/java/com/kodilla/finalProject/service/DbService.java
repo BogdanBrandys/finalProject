@@ -27,27 +27,6 @@ public class DbService {
     private final TMDBService tmdbService;
     private final UserActionService userActionService;
 
-    public List<Movie> getAllMoviesFromFavourites() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UserWithNameNotFoundException(username));
-        userActionService.publishUserActionEvent(user, ActionType.VIEW_FAVORITES);
-        // Return the user's favorite movies
-        return user.getFavoriteMovies();
-    }
-
-    public Movie getMovieFromFavourites(final Long id) throws MovieNotFoundException {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UserWithNameNotFoundException(username));
-        // Return the user's favorite movies
-        List<Movie> movies = user.getFavoriteMovies();
-        return movies.stream()
-                .filter(movie -> movie.getMovie_id().equals(id))
-                .findFirst()
-                .orElseThrow(() -> new MovieNotFoundException(id));
-    }
-
     public Movie findOrCreateMovie(MovieBasicDTO movieBasicDTO) throws MovieExistsException {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByUsername(username)
@@ -74,30 +53,6 @@ public class DbService {
 
 
         return movie;
-
-    }
-
-    public boolean deleteMovieFromFavourites(final Long id) throws MovieNotFoundException, UserWithNameNotFoundException {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UserWithNameNotFoundException(username));
-
-        // Get the favorite movies list
-        List<Movie> favoriteMovies = user.getFavoriteMovies();
-
-        // Find the movie to remove
-        boolean movieRemoved = favoriteMovies.removeIf(movie -> movie.getMovie_id().equals(id));
-
-        // If no movie was removed, throw exception
-        if (!movieRemoved) {
-            throw new MovieNotFoundException(id);
-        }
-
-        // Save the updated user to persist the changes
-        userRepository.save(user);
-        userActionService.publishUserActionEvent(user, ActionType.REMOVE_FROM_FAVORITES);
-        return true;
     }
 
     public void updatePhysicalVersion(Long movieId, PhysicalVersionDTO physicalVersionDto) throws MovieNotFoundException {

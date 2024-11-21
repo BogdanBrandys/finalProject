@@ -32,7 +32,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if (isPublicPage(request)) {
             chain.doFilter(request, response);
-            return; // Jeśli strona publiczna, nie sprawdzamy tokena
+            return;
         }
 
         String authHeader = request.getHeader("Authorization");
@@ -41,13 +41,15 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // checking, if endpoint needs token
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            token = authHeader.substring(7);  // Usuwamy "Bearer "
+            token = authHeader.substring(7);
             try {
-                jwtUtility.validateTokenFormat(token);  // Sprawdzamy format tokenu
+                jwtUtility.validateTokenFormat(token);
                 username = jwtUtility.extractUsername(token);
-            } catch (InvalidTokenException | TokenFormatException e) {
-                throw new InvalidTokenException(e.getMessage());
+            } catch (InvalidTokenException e) {
+                throw new InvalidTokenException("Token validation failed: " + e.getMessage());
             }
+        } else {
+            throw new InvalidTokenException("Authorization header is missing or does not contain Bearer token.");
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -68,8 +70,7 @@ public class JwtFilter extends OncePerRequestFilter {
         chain.doFilter(request, response);
     }
     private boolean isPublicPage(HttpServletRequest request) {
-        // Sprawdzanie, czy żądana ścieżka jest publiczna
         String path = request.getRequestURI();
-        return path.equals("/") || path.equals("/v1/login") || path.equals("/register") || path.startsWith("/actuator/");
+        return path.equals("/") || path.equals("/v1/login") || path.equals("/v1/users/register") || path.startsWith("/actuator/");
     }
 }

@@ -17,7 +17,7 @@ public class RoleService {
 
     public Role addRole(Role.RoleName roleName) {
 
-        if (roleRepository.findByName(roleName.name()).isPresent()) {
+        if (roleRepository.findByName(roleName).isPresent()) {
             throw new RoleAlreadyExistsException(roleName.name());
         }
 

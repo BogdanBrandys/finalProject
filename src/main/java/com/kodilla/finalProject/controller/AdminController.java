@@ -2,13 +2,14 @@ package com.kodilla.finalProject.controller;
 
 import com.kodilla.finalProject.domain.User;
 import com.kodilla.finalProject.domain.UserDTO;
-import com.kodilla.finalProject.errorHandling.UserWithNameNotFoundException;
+import com.kodilla.finalProject.errorHandling.EmailExistsException;
+import com.kodilla.finalProject.errorHandling.RoleWithNameNotFoundException;
+import com.kodilla.finalProject.errorHandling.UsernameExistsException;
 import com.kodilla.finalProject.mapper.UserMapper;
 import com.kodilla.finalProject.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -47,12 +48,11 @@ public class AdminController {
             description = "Create new user in database",
             summary = "Create user"
     )
+    @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/users/create")
-    public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDTO){
-        User user = userMapper.mapUserDtoToUser(userDTO);
-        User savedUser = userService.createUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body((userMapper.mapUserToUserDto(savedUser)));
+    public ResponseEntity<String> createUserByAdmin(@RequestBody UserDTO userDto) throws UsernameExistsException, EmailExistsException, RoleWithNameNotFoundException {
+        userService.registerUser(userDto, true);
+        return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully!");
     }
 
     @Operation(
@@ -61,8 +61,8 @@ public class AdminController {
     )
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/users/{id}")
-    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @RequestBody UserDTO userDTO) {
-        User updatedUser = userService.updateUser(id, userDTO);
+    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @RequestBody UserDTO userDTO) throws UsernameExistsException, EmailExistsException, RoleWithNameNotFoundException {
+        User updatedUser = userService.updateUser(id, userDTO, true);
         return ResponseEntity.ok(userMapper.mapUserToUserDto(updatedUser));
     }
 
@@ -77,23 +77,6 @@ public class AdminController {
         if(isDeleted){
             return ResponseEntity.noContent().build();
         } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    @Operation(
-            description = "Updates the status of an existing user identified by its ID.",
-            summary = "Update user status"
-    )
-    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping(value = "/{userId}/status", produces = MediaType.APPLICATION_JSON_VALUE,
-            consumes = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Void> updateUserStatus(@PathVariable Long userId, @RequestBody User.UserStatus userStatus) throws UserWithNameNotFoundException {
-        try {
-            userService.updateUserStatus(userId, userStatus);
-            return ResponseEntity.noContent().build();
-        } catch (UserWithNameNotFoundException e) {
             return ResponseEntity.notFound().build();
         }
     }

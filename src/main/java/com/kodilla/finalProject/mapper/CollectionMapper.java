@@ -84,12 +84,11 @@ public class CollectionMapper {
     public MovieDTO mapToMovieDTO(Movie movie) {
         MovieDTO movieDTO = new MovieDTO();
         //simple fields
-        movieDTO.setMovie_id(movie.getMovie_id());
+        movieDTO.setMovie_id(movie.getId());
         movieDTO.setTmdbId(movie.getTmdbId());
         //mappers
         movieDTO.setDetails(movieDetailsToMovieDetailsDTO(movie.getDetails()));
         movieDTO.setProviders(movieProvidersToGroupedProvidersDTO(movie.getProviders()));
-        movieDTO.setPhysicalVersion(movie.getPhysicalVersion());
         return movieDTO;
     }
     public List<MovieDTO> mapToMovieList(List<Movie> movieList) {

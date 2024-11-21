@@ -21,6 +21,10 @@ public class MovieProvider {
     @Enumerated(EnumType.STRING)
     private AccessType accessType;
 
+    @ManyToOne
+    @JoinColumn(name = "movies_id", referencedColumnName = "id", nullable = false)
+    private Movie movie;
+
     public enum AccessType {
         SUBSCRIPTION,
         RENTAL,
