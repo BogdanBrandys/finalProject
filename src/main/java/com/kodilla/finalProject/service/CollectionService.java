@@ -1,13 +1,12 @@
 package com.kodilla.finalProject.service;
 
-import com.kodilla.finalProject.domain.Movie;
-import com.kodilla.finalProject.domain.MovieCollectionStatsDTO;
-import com.kodilla.finalProject.domain.User;
+import com.kodilla.finalProject.domain.*;
 import com.kodilla.finalProject.errorHandling.MovieInUsersListException;
 import com.kodilla.finalProject.errorHandling.MovieNotFoundException;
 import com.kodilla.finalProject.errorHandling.UserWithIdNotFoundException;
 import com.kodilla.finalProject.errorHandling.UserWithNameNotFoundException;
 import com.kodilla.finalProject.event.ActionType;
+import com.kodilla.finalProject.mapper.CollectionMapper;
 import com.kodilla.finalProject.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,26 +22,55 @@ public class CollectionService {
 
     private final UserRepository userRepository;
     private final UserActionService userActionService;
+    private final CollectionMapper collectionMapper;
+    private final DbService dbService;
 
-    public List<Movie> getAllMoviesFromFavourites() {
+    public List<MovieDTO> getAllMoviesFromFavourites() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserWithNameNotFoundException(username));
         userActionService.publishUserActionEvent(user, ActionType.VIEW_FAVORITES);
-        // Return the user's favorite movies
-        return user.getFavoriteMovies();
+
+        List<PhysicalVersionDTO> physicalVersions = dbService.getPhysicalVersions();
+
+        return user.getFavoriteMovies().stream()
+                .map(movie -> {
+                    PhysicalVersionDTO physicalVersionDTO = physicalVersions.stream()
+                            .filter(physicalVersion -> physicalVersion.getMovieTitle().equals(movie.getDetails().getTitle()))
+                            .findFirst()
+                            .orElse(null);
+
+                    MovieDTO movieDTO = collectionMapper.mapToMovieDTO(movie);
+
+                    movieDTO.setPhysicalVersion(physicalVersionDTO);
+
+                    return movieDTO;
+                })
+                .collect(Collectors.toList());
     }
 
-    public Movie getMovieFromFavourites(final Long id) throws MovieNotFoundException {
+    public MovieDTO getMovieFromFavourites(final Long id) throws MovieNotFoundException {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserWithNameNotFoundException(username));
-        // Return the user's favorite movies
+
         List<Movie> movies = user.getFavoriteMovies();
-        return movies.stream()
-                .filter(movie -> movie.getId().equals(id))
+        Movie movie = movies.stream()
+                .filter(m -> m.getId().equals(id))
                 .findFirst()
                 .orElseThrow(() -> new MovieNotFoundException(id));
+
+        List<PhysicalVersionDTO> physicalVersions = dbService.getPhysicalVersions();
+        PhysicalVersionDTO physicalVersionDTO = physicalVersions.stream()
+                .filter(physicalVersion -> physicalVersion.getMovieTitle().equals(movie.getDetails().getTitle()))
+                .findFirst()
+                .orElse(null);
+
+        MovieDTO movieDTO = collectionMapper.mapToMovieDTO(movie);
+
+        movieDTO.setPhysicalVersion(physicalVersionDTO);
+        userActionService.publishUserActionEvent(user, ActionType.VIEW_FAVORITES);
+        return movieDTO;
     }
 
     public void addMovieToUserFavorites(Movie movie, User user) {

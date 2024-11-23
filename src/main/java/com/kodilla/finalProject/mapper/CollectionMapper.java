@@ -48,9 +48,10 @@ public class CollectionMapper {
         return movieDetailsDTO;
     }
 
-    public MovieProvider movieProviderDTOToMovieProvider(MovieProviderDTO movieProviderDTO) {
+    public MovieProvider movieProviderDTOToMovieProvider(MovieProviderDTO movieProviderDTO, Movie movie) {
         return MovieProvider.builder().providerName(movieProviderDTO.getProvider_name())
                 .accessType(movieProviderDTO.getAccessType())
+                .movie(movie)
                 .build();
     }
 
@@ -75,9 +76,9 @@ public class CollectionMapper {
         return groupedProviders;
     }
 
-    public List<MovieProvider> movieProviderDTOListToMovieProviderList(List<MovieProviderDTO> providerDTOList) {
+    public List<MovieProvider> movieProviderDTOListToMovieProviderList(List<MovieProviderDTO> providerDTOList, Movie movie) {
         return providerDTOList.stream()
-                .map(this::movieProviderDTOToMovieProvider)
+                .map(dto -> movieProviderDTOToMovieProvider(dto, movie))
                 .toList();
     }
 
@@ -91,9 +92,21 @@ public class CollectionMapper {
         movieDTO.setProviders(movieProvidersToGroupedProvidersDTO(movie.getProviders()));
         return movieDTO;
     }
+
+    public MovieWithPhysicalVersionDTO mapToMovieWithPhysicalVersionDTO(Movie movie, PhysicalVersionDTO physicalVersionDTO) {
+        MovieWithPhysicalVersionDTO dto = new MovieWithPhysicalVersionDTO();
+        dto.setMovie_id(movie.getId());
+        dto.setTmdbId(movie.getTmdbId());
+        dto.setDetails(movieDetailsToMovieDetailsDTO(movie.getDetails()));
+        dto.setProviders(movieProvidersToGroupedProvidersDTO(movie.getProviders()));
+        dto.setPhysicalVersion(physicalVersionDTO);
+        return dto;
+    }
+
     public List<MovieDTO> mapToMovieList(List<Movie> movieList) {
         return movieList.stream()
                 .map(this::mapToMovieDTO)
                 .collect(Collectors.toList());
     }
+
 }

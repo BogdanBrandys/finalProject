@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class MovieDTO {
+public class MovieWithPhysicalVersionDTO {
     private Long movie_id;
     private Long tmdbId;
     private MovieDetailsDTO details;

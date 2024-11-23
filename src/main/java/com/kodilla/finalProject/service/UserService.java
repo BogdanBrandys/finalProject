@@ -38,20 +38,22 @@ public class UserService {
             throw new EmailExistsException(userDto.getEmail());
         }
 
-        // list of roles
-        List<Role> roles;
-
+        //assigning roles
+        List<Role> roles = new ArrayList<>();
         if (assignRoles && userDto.getRoles() != null && !userDto.getRoles().isEmpty()) {
-            // roles from dto to entity
             roles = userDto.getRoles().stream()
                     .map(roleDto -> roleRepository.findByName(roleDto.getName())
-                            .orElseThrow(() -> new RoleWithNameNotFoundException(roleDto.getName().name())))
+                            .orElseGet(() -> {
+                                System.out.println("Nie znaleziono roli: " + roleDto.getName());
+                                return null;
+                            }))
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toList());
-        } else {
-            // if there is no role, set "USER"
-            Role defaultRole = roleRepository.findByName(Role.RoleName.USER)
-                    .orElseThrow(() -> new RoleWithNameNotFoundException(Role.RoleName.USER.name()));
-            roles = List.of(defaultRole);
+        }
+        if (roles.isEmpty()) {
+            Role defaultRole = roleRepository.findByName("USER")
+                    .orElseThrow(() -> new RoleWithNameNotFoundException("USER"));
+            roles.add(defaultRole);
         }
 
         // map userDTO to user
@@ -87,12 +89,23 @@ public class UserService {
             throw new EmailExistsException(userDto.getEmail());
         }
 
-        List<Role> roles = existingUser.getRoles();  // Default to current roles
+        //Assigning roles
+        List<Role> roles = new ArrayList<>(existingUser.getRoles()); // Domyślnie obecne role
         if (assignRoles && userDto.getRoles() != null && !userDto.getRoles().isEmpty()) {
             roles = userDto.getRoles().stream()
                     .map(roleDto -> roleRepository.findByName(roleDto.getName())
-                            .orElseThrow(() -> new RoleWithNameNotFoundException(roleDto.getName().name())))
+                            .orElseGet(() -> {
+                                System.out.println("Nie znaleziono roli: " + roleDto.getName());
+                                return null;
+                            }))
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toList());
+        }
+
+        if (roles.isEmpty()) {
+            Role defaultRole = roleRepository.findByName("USER")
+                    .orElseThrow(() -> new RoleWithNameNotFoundException("USER"));
+            roles.add(defaultRole);
         }
 
         // Update user details

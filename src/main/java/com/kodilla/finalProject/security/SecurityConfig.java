@@ -34,8 +34,8 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())  // CSRF disable
                 .authorizeRequests(authz -> authz
                         .requestMatchers("/","/v1/login", "/v1/users/register", "/actuator/**","/favicon.ico", "/frontend/**", "/VAADIN/**", "/images/**").permitAll()
-                        .requestMatchers("/user/**" ).hasRole(Role.RoleName.USER.name())
-                        .requestMatchers("/admin/**").hasRole(Role.RoleName.ADMIN.name())
+                        .requestMatchers("/v1/tmdb/search", "/v1/users/**", "/v1/movies/**").hasAuthority("USER")
+                        .requestMatchers("/v1/admin/**", "/v1/tmdb/providers", "/v1/role/**", "/v1/tmdb/details").hasAuthority("ADMIN")
                         .anyRequest().authenticated())
                 .securityContext(securityContext ->
                         securityContext.requireExplicitSave(false)

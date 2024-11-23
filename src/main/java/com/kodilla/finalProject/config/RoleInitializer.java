@@ -17,9 +17,9 @@ public class RoleInitializer implements CommandLineRunner {
         if (roleRepository.count() == 0) {
 
             Role userRole = new Role();
-            userRole.setName(Role.RoleName.USER);
+            userRole.setName("USER");
             Role adminRole = new Role();
-            adminRole.setName(Role.RoleName.ADMIN);
+            adminRole.setName("ADMIN");
             roleRepository.save(userRole);
             roleRepository.save(adminRole);
         }

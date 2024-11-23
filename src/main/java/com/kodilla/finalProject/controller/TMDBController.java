@@ -26,8 +26,7 @@ public class TMDBController {
             summary = "Searches for a movie and retrieve Basic Data"
     )
     @PreAuthorize("hasRole('USER')")
-    @GetMapping(value ="/search", produces = MediaType.APPLICATION_JSON_VALUE,
-            consumes = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value ="/search", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<MovieBasicDTO>> searchMovie(@RequestParam String title) {
         List<MovieBasicDTO> movies = tmdbService.searchMoviesInTMDB(title);
         return ResponseEntity.ok(movies);
@@ -37,8 +36,7 @@ public class TMDBController {
             summary = "Searches movie providers"
     )
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping(value = "/providers", produces = MediaType.APPLICATION_JSON_VALUE,
-            consumes = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/providers", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<MovieProviderDTO>> searchProviders(@RequestParam Long id) {
         List<MovieProviderDTO> providers = tmdbService.searchProvidersInTMDB(id);
         return ResponseEntity.ok(providers);

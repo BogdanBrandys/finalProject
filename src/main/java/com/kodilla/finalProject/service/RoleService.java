@@ -15,10 +15,10 @@ public class RoleService {
 
     private final RoleRepository roleRepository;
 
-    public Role addRole(Role.RoleName roleName) {
+    public Role addRole(String roleName) {
 
         if (roleRepository.findByName(roleName).isPresent()) {
-            throw new RoleAlreadyExistsException(roleName.name());
+            throw new RoleAlreadyExistsException(roleName);
         }
 
         Role role = new Role(null, roleName);

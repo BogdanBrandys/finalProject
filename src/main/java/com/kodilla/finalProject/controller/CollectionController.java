@@ -39,8 +39,8 @@ public class CollectionController {
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE,
     consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<MovieDTO>> getMovies() {
-        List<Movie> movies = collectionService.getAllMoviesFromFavourites();
-        return ResponseEntity.ok(movieMapper.mapToMovieList(movies));
+        List<MovieDTO> movies = collectionService.getAllMoviesFromFavourites();
+        return ResponseEntity.ok(movies);
     }
 
     @Operation(
@@ -51,7 +51,7 @@ public class CollectionController {
     @GetMapping(value ="/{movieId}", produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<MovieDTO> getMovie(@PathVariable Long movieId) throws MovieNotFoundException {
-        return ResponseEntity.ok(movieMapper.mapToMovieDTO(collectionService.getMovieFromFavourites(movieId)));
+        return ResponseEntity.ok(collectionService.getMovieFromFavourites(movieId));
     }
 
     @Operation(
@@ -76,7 +76,7 @@ public class CollectionController {
     )
     @PreAuthorize("hasRole('USER')")
     @PostMapping(value = "/add", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<MovieDTO> addMovie(@RequestBody MovieBasicDTO movieBasicDTO) throws MovieExistsException {
+    public ResponseEntity<MovieDTO> addMovie(@RequestBody MovieBasicDTO movieBasicDTO) {
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 

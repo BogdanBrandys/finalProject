@@ -24,7 +24,7 @@ public class UserController {
     @Operation(description = "Registers a new user with the provided username, email, and other details",
             summary = "Create a new user"
     )
-    @PostMapping("/register") //POSTMAN
+    @PostMapping("/register")
     public ResponseEntity<String> registerUser(@RequestBody UserDTO userDto) throws UsernameExistsException, EmailExistsException, RoleWithNameNotFoundException {
         userService.registerUser(userDto, false);
         return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully!");
@@ -34,7 +34,7 @@ public class UserController {
             summary = "Delete user")
 
     @PreAuthorize("hasRole('USER')")
-    @DeleteMapping("/{userId}") //POSTMAN
+    @DeleteMapping("/{userId}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long userId){
         boolean isDeleted = userService.deleteUserById(userId);
         if(isDeleted){
@@ -47,7 +47,7 @@ public class UserController {
             summary = "Update user")
 
     @PreAuthorize("hasRole('USER')")
-    @PutMapping("/{userId}") //POSTMAN
+    @PutMapping("/{userId}")
     public ResponseEntity<String> updateUser(@PathVariable Long userId, @RequestBody UserDTO userDTO) throws UsernameExistsException, EmailExistsException, RoleWithNameNotFoundException {
         try {
             userService.updateUser(userId, userDTO, false);

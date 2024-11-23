@@ -4,13 +4,12 @@ import com.kodilla.finalProject.domain.*;
 import com.kodilla.finalProject.errorHandling.*;
 import com.kodilla.finalProject.event.ActionType;
 import com.kodilla.finalProject.mapper.CollectionMapper;
-import com.kodilla.finalProject.repository.CollectionRepository;
-import com.kodilla.finalProject.repository.UserMovieRepository;
-import com.kodilla.finalProject.repository.UserRepository;
+import com.kodilla.finalProject.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -20,47 +19,56 @@ import java.util.stream.Collectors;
 public class DbService {
 
     private final UserRepository userRepository;
-    private final CollectionRepository collectionRepository;
-    private final UserMovieRepository movieRepository;
+    private final MovieRepository movieRepository;
+    private final UserMovieRepository userMovieRepository;
+    private final MovieDetailsRepository movieDetailsRepository;
+    private final MovieProviderRepository movieProviderRepository;
+    private final PhysicalVersionRepository physicalVersionRepository;
     private final CollectionMapper collectionMapper;
     private final OMDBService omdbService;
     private final TMDBService tmdbService;
     private final UserActionService userActionService;
 
-    public Movie findOrCreateMovie(MovieBasicDTO movieBasicDTO) throws MovieExistsException {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UserWithNameNotFoundException(username));
+    public Movie findOrCreateMovie(MovieBasicDTO movieBasicDTO){
+        Optional<Movie> existingMovie = movieRepository.findByTmdbId(movieBasicDTO.getId());
+        Movie movie;
 
-        Optional<Movie> existingMovie = collectionRepository.findByTmdbId(movieBasicDTO.getId());
         if (existingMovie.isPresent()) {
-            return existingMovie.get();
+            movie = existingMovie.get();  // get movie from database
+            return movie;
         }
 
-        // getting DTOs
         MovieDetailsDTO movieDetailsDTO = omdbService.getMovieDetails(movieBasicDTO.getTitle(), movieBasicDTO.getRelease_date());
-        List<MovieProviderDTO> movieProviderDTOs = tmdbService.searchProvidersInTMDB(movieBasicDTO.getId());
 
-        // map to domain
         MovieDetails movieDetails = collectionMapper.movieDetailsDTOToMovieDetails(movieDetailsDTO);
-        List<MovieProvider> movieProviders = collectionMapper.movieProviderDTOListToMovieProviderList(movieProviderDTOs);
 
-        // creating Movie object
-        Movie movie = new Movie();
-        movie.setTmdbId(movieBasicDTO.getId());
-        movie.setDetails(movieDetails);
-        movie.setProviders(movieProviders);
+        Movie newMovie = new Movie();
+        newMovie.setTmdbId(movieBasicDTO.getId());
+        newMovie.setDetails(movieDetails);
 
+        movieDetailsRepository.save(movieDetails);
 
-        return movie;
+        newMovie = movieRepository.save(newMovie);
+
+        List<MovieProviderDTO> movieProviderDTOs = tmdbService.searchProvidersInTMDB(movieBasicDTO.getId());
+        if (!movieProviderDTOs.isEmpty()) {
+            List<MovieProvider> movieProviders = collectionMapper.movieProviderDTOListToMovieProviderList(movieProviderDTOs, newMovie);
+            newMovie.setProviders(movieProviders);
+        } else {
+            newMovie.setProviders(Collections.emptyList());
+        }
+
+        movieProviderRepository.saveAll(newMovie.getProviders());
+        return newMovie;
     }
-
     public void updatePhysicalVersion(Long movieId, PhysicalVersionDTO physicalVersionDto) throws MovieNotFoundException {
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new UserWithNameNotFoundException(currentUsername));
 
-        UserMovie userMovie = movieRepository.findByUserAndMovieId(currentUser, movieId)
+        Movie movie = currentUser.getFavoriteMovies().stream()
+                .filter(favMovie -> favMovie.getId().equals(movieId))
+                .findFirst()
                 .orElseThrow(() -> new MovieNotFoundException(movieId));
 
         PhysicalVersion physicalVersion = new PhysicalVersion();
@@ -69,25 +77,35 @@ public class DbService {
         physicalVersion.setSteelbook(physicalVersionDto.getSteelbook());
         physicalVersion.setDetails(physicalVersionDto.getDetails());
 
+        physicalVersionRepository.save(physicalVersion);
+
+        UserMovie userMovie = new UserMovie();
+        userMovie.setUser(currentUser);
+        userMovie.setMovie(movie);
         userMovie.setPhysicalVersion(physicalVersion);
+
+        userMovieRepository.save(userMovie);
+
         userActionService.publishUserActionEvent(currentUser, ActionType.ADD_PHYSICAL_VERSION);
-        movieRepository.save(userMovie);
+
+        physicalVersionRepository.save(physicalVersion);
+
     }
 
     public List<PhysicalVersionDTO> getPhysicalVersions() {
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new UserWithNameNotFoundException(currentUsername));
-        List<UserMovie> userMovies = movieRepository.findByUser_Id(currentUser.getId());
+        List<UserMovie> userMovies = userMovieRepository.findByUser_Id(currentUser.getId());
         userActionService.publishUserActionEvent(currentUser, ActionType.GET_ALL_PHYSICAL_VERSIONS);
         return userMovies.stream()
-                .filter(userMovie -> userMovie.getPhysicalVersion() != null) // tylko filmy z wersjami fizycznymi
+                .filter(userMovie -> userMovie.getPhysicalVersion() != null)
                 .map(userMovie -> new PhysicalVersionDTO(
                         userMovie.getPhysicalVersion().getDescription(),
                         userMovie.getPhysicalVersion().getReleaseYear(),
                         userMovie.getPhysicalVersion().getSteelbook(),
                         userMovie.getPhysicalVersion().getDetails(),
-                        userMovie.getMovie().getDetails().getTitle() // nazwa filmu
+                        userMovie.getMovie().getDetails().getTitle()
                 ))
                 .collect(Collectors.toList());
     }

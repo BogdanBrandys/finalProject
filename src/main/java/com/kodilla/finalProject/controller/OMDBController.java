@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/v1/omdb")
+@RequestMapping("/v1/admin")
 @RequiredArgsConstructor
 public class OMDBController {
 
@@ -23,8 +23,7 @@ public class OMDBController {
             summary = "Searches movie details"
     )
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping(value = "/details", produces = MediaType.APPLICATION_JSON_VALUE,
-            consumes = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/omdb/details", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<MovieDetailsDTO> getMovieDetails(@RequestParam("t") String title,
                                                            @RequestParam("y") String year) {
         MovieDetailsDTO movieDetails = omdbService.getMovieDetails(title,year);

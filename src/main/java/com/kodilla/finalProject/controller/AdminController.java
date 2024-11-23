@@ -48,7 +48,7 @@ public class AdminController {
             description = "Create new user in database",
             summary = "Create user"
     )
-    @PostMapping("/create")
+    @PostMapping("/users/create")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> createUserByAdmin(@RequestBody UserDTO userDto) throws UsernameExistsException, EmailExistsException, RoleWithNameNotFoundException {
         userService.registerUser(userDto, true);

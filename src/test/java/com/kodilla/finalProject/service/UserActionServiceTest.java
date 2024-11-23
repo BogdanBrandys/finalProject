@@ -2,6 +2,7 @@ package com.kodilla.finalProject.service;
 
 import com.kodilla.finalProject.event.ActionType;
 import com.kodilla.finalProject.event.UserAction;
+import com.kodilla.finalProject.event.UserActionEvent;
 import com.kodilla.finalProject.event.UserActionEventListener;
 import com.kodilla.finalProject.repository.UserActionRepository;
 import org.junit.jupiter.api.Test;
@@ -28,12 +29,10 @@ class UserActionServiceTest {
     @Test
     void testOnUserActionEvent() {
         // Given
-        UserAction event = mock(UserAction.class);
+        UserActionEvent event = mock(UserActionEvent.class);
         when(event.getUserId()).thenReturn(1L);
         when(event.getUserEmail()).thenReturn("testuser@example.com");
         when(event.getAction()).thenReturn(ActionType.LOGIN);
-        LocalDateTime now = LocalDateTime.now();
-        when(event.getTimestamp()).thenReturn(now);
         // When
         userActionEventListener.onUserActionEvent(event);
 
@@ -47,6 +46,5 @@ class UserActionServiceTest {
         assertEquals(1L, savedAction.getUserId());
         assertEquals("testuser@example.com", savedAction.getUserEmail());
         assertEquals(ActionType.LOGIN, savedAction.getAction());
-        assertEquals(now, savedAction.getTimestamp());
     }
 }

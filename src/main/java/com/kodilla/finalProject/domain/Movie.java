@@ -17,11 +17,19 @@ public class Movie {
         private Long id;
         private Long tmdbId;
         //omdb data
-        @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+        @OneToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
         @JoinColumn(name = "details_id")
         private MovieDetails details;
         //tmdb data
         @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
         private List<MovieProvider> providers;
 
+        @Override
+        public String toString() {
+                return "Movie{" +
+                        "tmdbId='" + tmdbId + '\'' +
+                        ", details=" + (details != null ? details.toString() : "null") +
+                        ", providers=" + (providers != null ? providers.size() : 0) +
+                        '}';
+        }
 }

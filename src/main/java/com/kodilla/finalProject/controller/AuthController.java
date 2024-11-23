@@ -21,7 +21,7 @@ public class AuthController {
             summary = "Authenticate user and generate token",
             description = "Authenticates the user using their username and password. If the credentials are valid, it returns a token for future requests."
     )
-    @PostMapping//POSTMAN
+    @PostMapping
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest loginRequest) throws InvalidCredentialsException {
             String token = authService.authenticate(loginRequest.getUsername(), loginRequest.getPassword());
             return ResponseEntity.ok(new AuthResponse(token));

@@ -30,4 +30,12 @@ public class MovieProvider {
         RENTAL,
         PURCHASE
     }
+    @Override
+    public String toString() {
+        return "MovieProvider{" +
+                "name='" + providerName + '\'' +
+                ", accessType='" + accessType + '\'' +
+                ", movieId=" + (movie != null ? movie.getTmdbId() : "null") +
+                '}';
+    }
 }

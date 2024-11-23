@@ -1,8 +1,12 @@
 package com.kodilla.finalProject.security;
 
+import com.kodilla.finalProject.domain.Role;
+import com.kodilla.finalProject.domain.User;
 import com.kodilla.finalProject.errorHandling.InvalidTokenException;
 import com.kodilla.finalProject.errorHandling.TokenExpiredException;
 import com.kodilla.finalProject.errorHandling.TokenFormatException;
+import com.kodilla.finalProject.errorHandling.UserWithNameNotFoundException;
+import com.kodilla.finalProject.repository.UserRepository;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.Claims;
@@ -12,12 +16,15 @@ import org.springframework.stereotype.Component;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtUtility {
     @Value("${jwt.secret}")
     private String secretKey;
+    private UserRepository userRepository;
 
     public String generateToken(String username) {
         Map<String, Object> claims = new HashMap<>();

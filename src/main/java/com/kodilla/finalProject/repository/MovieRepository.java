@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface CollectionRepository extends CrudRepository<Movie, Long> {
+public interface MovieRepository extends CrudRepository<Movie, Long> {
     @Override
     List<Movie> findAll();
     @Override
