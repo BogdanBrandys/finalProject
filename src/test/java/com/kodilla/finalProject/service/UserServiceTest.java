@@ -20,6 +20,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Arrays;
 import java.util.List;
@@ -43,6 +44,9 @@ class UserServiceTest {
 
     @Mock
     private UserMapper userMapper;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserService userService;
@@ -68,10 +72,10 @@ class UserServiceTest {
     @Test
     void registerTest_shouldRegisterUserWithDefaultRole() throws Exception {
         // Given
-        Role defaultRole = new Role(1L, Role.RoleName.USER);
+        Role defaultRole = new Role(1L, "USER");
         when(userRepository.findByUsername(userDto.getUsername())).thenReturn(Optional.empty());
         when(userRepository.findByEmail(userDto.getEmail())).thenReturn(Optional.empty());
-        when(roleRepository.findByName(Role.RoleName.USER)).thenReturn(Optional.of(defaultRole));
+        when(roleRepository.findByName("USER")).thenReturn(Optional.of(defaultRole));
         when(userMapper.mapUserDtoToUser(userDto)).thenReturn(user);
         when(userRepository.save(user)).thenReturn(user);
 
@@ -82,7 +86,7 @@ class UserServiceTest {
         assertNotNull(registeredUser);
         assertEquals("JohnSmith", registeredUser.getUsername());
         assertEquals(1, registeredUser.getRoles().size());
-        assertEquals(Role.RoleName.USER, registeredUser.getRoles().get(0).getName());
+        assertEquals("USER", registeredUser.getRoles().get(0).getName());
 
         verify(userActionService).publishUserActionEvent(user, ActionType.REGISTER_USER);
         verify(userRepository).save(user);
@@ -91,13 +95,14 @@ class UserServiceTest {
     @Test
     void registerTest_shouldRegisterUserWithCustomRoles() throws Exception {
         // Given
-        Role adminRole = new Role(2L, Role.RoleName.ADMIN);
-        userDto.setRoles(List.of(new RoleDTO(Role.RoleName.ADMIN)));
+        Role adminRole = new Role(2L, "ADMIN");
+        userDto.setRoles(List.of(new RoleDTO("ADMIN"))); // Custom role provided in DTO
 
         when(userRepository.findByUsername(userDto.getUsername())).thenReturn(Optional.empty());
         when(userRepository.findByEmail(userDto.getEmail())).thenReturn(Optional.empty());
-        when(roleRepository.findByName(Role.RoleName.ADMIN)).thenReturn(Optional.of(adminRole));
+        when(roleRepository.findByName("ADMIN")).thenReturn(Optional.of(adminRole));
         when(userMapper.mapUserDtoToUser(userDto)).thenReturn(user);
+        when(passwordEncoder.encode(userDto.getPassword())).thenReturn("encodedPassword");
         when(userRepository.save(user)).thenReturn(user);
 
         // When
@@ -106,7 +111,7 @@ class UserServiceTest {
         // Then
         assertNotNull(registeredUser);
         assertEquals(1, registeredUser.getRoles().size());
-        assertEquals(Role.RoleName.ADMIN, registeredUser.getRoles().get(0).getName());
+        assertEquals("ADMIN", registeredUser.getRoles().get(0).getName());
 
         verify(userActionService).publishUserActionEvent(user, ActionType.REGISTER_USER);
         verify(userRepository).save(user);
@@ -143,35 +148,37 @@ class UserServiceTest {
     @Test
     void registerTest_shouldThrowExceptionWhenRoleNotFound() {
         // Given
-        userDto.setRoles(List.of(new RoleDTO(Role.RoleName.ADMIN)));
+        userDto.setRoles(List.of(new RoleDTO("ADMIN")));
         when(userRepository.findByUsername(userDto.getUsername())).thenReturn(Optional.empty());
         when(userRepository.findByEmail(userDto.getEmail())).thenReturn(Optional.empty());
-        when(roleRepository.findByName(Role.RoleName.ADMIN)).thenReturn(Optional.empty());
+        when(roleRepository.findByName("ADMIN")).thenReturn(Optional.empty());
+        when(roleRepository.findByName("USER")).thenReturn(Optional.empty());
 
         // When & Then
-        RoleWithNameNotFoundException exception = Assertions.assertThrows(RoleWithNameNotFoundException.class, () ->
-                userService.registerUser(userDto, true)
+        RoleWithNameNotFoundException exception = Assertions.assertThrows(
+                RoleWithNameNotFoundException.class,
+                () -> userService.registerUser(userDto, true)
         );
 
-        assertEquals(Role.RoleName.ADMIN.name(), exception.getRoleName());
-        verify(userRepository, Mockito.never()).save(Mockito.any());
+        assertEquals("USER", exception.getRoleName());
+        verify(userRepository, never()).save(any());
     }
 
     @Test
     void updateTest_shouldUpdateUserWithNewRoles() throws Exception {
         // Given
         Long userId = 1L;
-        Role newRole = new Role(2L, Role.RoleName.ADMIN);
+        Role newRole = new Role(2L, "ADMIN");
         User existingUser = new User();
         existingUser.setUsername("JohnSmith");
         existingUser.setEmail("john_smith@example.com");
-        existingUser.setRoles(List.of(new Role(1L, Role.RoleName.USER)));
+        existingUser.setRoles(List.of(new Role(1L, "USER")));
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
-        when(roleRepository.findByName(Role.RoleName.ADMIN)).thenReturn(Optional.of(newRole));
+        when(roleRepository.findByName("ADMIN")).thenReturn(Optional.of(newRole));
         when(userRepository.save(existingUser)).thenReturn(existingUser);
 
-        userDto.setRoles(List.of(new RoleDTO(Role.RoleName.ADMIN)));
+        userDto.setRoles(List.of(new RoleDTO("ADMIN")));
 
         // When
         User updatedUser = userService.updateUser(userId, userDto, true);
@@ -180,7 +187,7 @@ class UserServiceTest {
         assertNotNull(updatedUser);
         assertEquals("JohnSmith", updatedUser.getUsername());
         assertEquals(1, updatedUser.getRoles().size());
-        assertEquals(Role.RoleName.ADMIN, updatedUser.getRoles().get(0).getName());
+        assertEquals("ADMIN", updatedUser.getRoles().get(0).getName());
 
         verify(userActionService).publishUserActionEvent(existingUser, ActionType.UPDATE_PROFILE);
         verify(userRepository).save(existingUser);
@@ -190,14 +197,13 @@ class UserServiceTest {
     void updateTest_shouldUpdateUserWithDefaultRoleIfNoRoleProvided() throws Exception {
         // Given
         Long userId = 1L;
-        Role defaultRole = new Role(1L, Role.RoleName.USER);
+        Role defaultRole = new Role(1L, "USER");
         User existingUser = new User();
         existingUser.setUsername("JohnSmith");
         existingUser.setEmail("john_smith@example.com");
-        existingUser.setRoles(List.of(new Role(1L, Role.RoleName.USER)));
+        existingUser.setRoles(List.of(new Role(1L, "USER")));
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
-        when(roleRepository.findByName(Role.RoleName.USER)).thenReturn(Optional.of(defaultRole));
         when(userRepository.save(existingUser)).thenReturn(existingUser);
 
         // When
@@ -206,7 +212,7 @@ class UserServiceTest {
         // Then
         assertNotNull(updatedUser);
         assertEquals(1, updatedUser.getRoles().size());
-        assertEquals(Role.RoleName.USER, updatedUser.getRoles().get(0).getName());
+        assertEquals("USER", updatedUser.getRoles().get(0).getName());
 
         verify(userActionService).publishUserActionEvent(existingUser, ActionType.UPDATE_PROFILE);
         verify(userRepository).save(existingUser);

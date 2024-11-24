@@ -106,13 +106,13 @@ class TMDBServiceTest {
         Long tmdbId = 123L;
         List<MovieProviderDTO> providerList = List.of(new MovieProviderDTO("Netflix", MovieProvider.AccessType.SUBSCRIPTION));
 
-        // Mockowanie odpowiedzi z tmdbClient
+        // Mock service response
         when(tmdbClient.searchProviders(tmdbId)).thenReturn(providerList);
 
-        // When: Wywołanie metody z serwisu
+        // When
         List<MovieProviderDTO> result = tmdbService.searchProvidersInTMDB(tmdbId);
 
-        // Then: Sprawdzenie wyników
+        // Then
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("Netflix", result.get(0).getProvider_name());
@@ -126,13 +126,13 @@ class TMDBServiceTest {
         // Given
         Long tmdbId = 123L;
 
-        // Mockowanie pustej odpowiedzi z tmdbClient
+        // Mock service response
         when(tmdbClient.searchProviders(tmdbId)).thenReturn(List.of());
 
-        // When: Wywołanie metody z serwisu
+        // When
         List<MovieProviderDTO> result = tmdbService.searchProvidersInTMDB(tmdbId);
 
-        // Then: Sprawdzenie, czy wynik jest pusty
+        // Then
         assertNotNull(result);
         assertTrue(result.isEmpty());
 

@@ -1,5 +1,6 @@
 package com.kodilla.finalProject.service;
 
+import com.kodilla.finalProject.domain.User;
 import com.kodilla.finalProject.event.ActionType;
 import com.kodilla.finalProject.event.UserAction;
 import com.kodilla.finalProject.event.UserActionEvent;
@@ -11,8 +12,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDateTime;
+import org.springframework.context.ApplicationEventPublisher;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -21,30 +21,29 @@ import static org.mockito.Mockito.*;
 class UserActionServiceTest {
 
     @InjectMocks
-    private UserActionEventListener userActionEventListener;
+    private UserActionService userActionService;
 
     @Mock
-    private UserActionRepository userActionRepository;
+    private ApplicationEventPublisher applicationEventPublisher;
 
     @Test
-    void testOnUserActionEvent() {
+    void shouldPublishUserActionEvent() {
         // Given
-        UserActionEvent event = mock(UserActionEvent.class);
-        when(event.getUserId()).thenReturn(1L);
-        when(event.getUserEmail()).thenReturn("testuser@example.com");
-        when(event.getAction()).thenReturn(ActionType.LOGIN);
+        User user = new User();
+        user.setId(1L);
+        user.setEmail("testuser@example.com");
+        ActionType action = ActionType.LOGIN;
+
         // When
-        userActionEventListener.onUserActionEvent(event);
+        userActionService.publishUserActionEvent(user, action);
 
         // Then
-        verify(userActionRepository).save(any(UserAction.class));
+        ArgumentCaptor<UserActionEvent> captor = ArgumentCaptor.forClass(UserActionEvent.class);
+        verify(applicationEventPublisher).publishEvent(captor.capture());
+        UserActionEvent publishedEvent = captor.getValue();
 
-        ArgumentCaptor<UserAction> captor = ArgumentCaptor.forClass(UserAction.class);
-        verify(userActionRepository).save(captor.capture());
-        UserAction savedAction = captor.getValue();
-
-        assertEquals(1L, savedAction.getUserId());
-        assertEquals("testuser@example.com", savedAction.getUserEmail());
-        assertEquals(ActionType.LOGIN, savedAction.getAction());
+        assertEquals(1L, publishedEvent.getUserId());
+        assertEquals("testuser@example.com", publishedEvent.getUserEmail());
+        assertEquals(ActionType.LOGIN, publishedEvent.getAction());
     }
 }

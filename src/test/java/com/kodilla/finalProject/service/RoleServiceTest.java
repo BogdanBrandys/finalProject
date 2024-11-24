@@ -27,7 +27,7 @@ class RoleServiceTest {
     @Test
     void testAddRoleShouldAddRole() {
         // Given
-        Role.RoleName roleName = Role.RoleName.ADMIN;
+        String roleName = "ADMIN";
         Role role = new Role(null, roleName);
         // When
         when(roleRepository.findByName(roleName)).thenReturn(Optional.empty());
@@ -43,12 +43,12 @@ class RoleServiceTest {
     @Test
     void testAddRoleShouldThrowExceptionWhenRoleExists() {
         // Given
-        Role.RoleName roleName = Role.RoleName.ADMIN;
+        String roleName = "ADMIN";
         when(roleRepository.findByName(roleName)).thenReturn(Optional.of(new Role(1L, roleName)));
 
         // When & Then
         RoleAlreadyExistsException exception = assertThrows(RoleAlreadyExistsException.class, () -> roleService.addRole(roleName));
-        assertEquals("Role " + roleName.name() + " already exists", exception.getMessage());
+        assertEquals("Role " + roleName + " already exists", exception.getMessage());
         verify(roleRepository, never()).save(any());
     }
 
@@ -56,7 +56,7 @@ class RoleServiceTest {
     void testDeleteRoleShouldReturnTrueWhenRoleExists() {
         // Given
         Long roleId = 1L;
-        Role role = new Role(roleId, Role.RoleName.ADMIN);
+        Role role = new Role(roleId, "ADMIN");
         when(roleRepository.findById(roleId)).thenReturn(Optional.of(role));
 
         // When
@@ -85,8 +85,8 @@ class RoleServiceTest {
     void testGetAllRoles() {
         // Given
         List<Role> roles = List.of(
-                new Role(1L, Role.RoleName.ADMIN),
-                new Role(2L, Role.RoleName.USER)
+                new Role(1L, "ADMIN"),
+                new Role(2L, "USER")
         );
         when(roleRepository.findAll()).thenReturn(roles);
 
@@ -96,8 +96,8 @@ class RoleServiceTest {
         // Then
         assertNotNull(result);
         assertEquals(2, result.size());
-        assertEquals(Role.RoleName.ADMIN, result.get(0).getName());
-        assertEquals(Role.RoleName.USER, result.get(1).getName());
+        assertEquals("ADMIN", result.get(0).getName());
+        assertEquals("USER", result.get(1).getName());
         verify(roleRepository).findAll();
     }
 }

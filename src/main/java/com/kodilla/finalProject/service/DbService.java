@@ -77,8 +77,6 @@ public class DbService {
         physicalVersion.setSteelbook(physicalVersionDto.getSteelbook());
         physicalVersion.setDetails(physicalVersionDto.getDetails());
 
-        physicalVersionRepository.save(physicalVersion);
-
         UserMovie userMovie = new UserMovie();
         userMovie.setUser(currentUser);
         userMovie.setMovie(movie);
