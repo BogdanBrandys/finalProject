@@ -59,8 +59,7 @@ public class CollectionController {
             summary = "Delete selected movie"
     )
     @PreAuthorize("hasRole('USER')")
-    @DeleteMapping(value ="/{movieId}", produces = MediaType.APPLICATION_JSON_VALUE,
-            consumes = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value ="/{movieId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> deleteMovie(@PathVariable Long movieId) throws MovieNotFoundException {
         boolean isDeleted = collectionService.deleteMovieFromFavourites(movieId);
         if (isDeleted) {
@@ -106,7 +105,7 @@ public class CollectionController {
             summary = "Add information about physical version"
     )
     @PreAuthorize("hasRole('USER')")
-    @PatchMapping("/{id}/physical")
+    @PutMapping("/{id}/physical")
     public ResponseEntity<String> updatePhysicalVersion(
             @PathVariable Long id,
             @RequestBody PhysicalVersionDTO physicalVersionDto) throws MovieNotFoundException{

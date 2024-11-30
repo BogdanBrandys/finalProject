@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("v1/users")
@@ -25,7 +27,7 @@ public class UserController {
             summary = "Create a new user"
     )
     @PostMapping("/register")
-    public ResponseEntity<String> registerUser(@RequestBody UserDTO userDto) throws UsernameExistsException, EmailExistsException, RoleWithNameNotFoundException {
+    public ResponseEntity<String> registerUser(@Valid @RequestBody UserDTO userDto) throws UsernameExistsException, EmailExistsException, RoleWithNameNotFoundException {
         userService.registerUser(userDto, false);
         return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully!");
     }

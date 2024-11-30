@@ -9,6 +9,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(
+        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "movie_id"})
+)
 public class UserMovie {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
