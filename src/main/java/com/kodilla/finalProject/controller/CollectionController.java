@@ -1,6 +1,7 @@
 package com.kodilla.finalProject.controller;
 
 import com.kodilla.finalProject.domain.*;
+import com.kodilla.finalProject.errorHandling.InvalidTokenException;
 import com.kodilla.finalProject.errorHandling.MovieExistsException;
 import com.kodilla.finalProject.errorHandling.MovieNotFoundException;
 import com.kodilla.finalProject.errorHandling.UserWithNameNotFoundException;
@@ -94,9 +95,15 @@ public class CollectionController {
             summary = "Get collection's statistics"
     )
     @PreAuthorize("hasRole('USER')")
-    @GetMapping(value = "/{userId}/stats", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<MovieCollectionStatsDTO> getUserMovieStats(@PathVariable Long userId) {
-        MovieCollectionStatsDTO stats = collectionService.getCollectionStats(userId);
+    @GetMapping(value = "/stats", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<MovieCollectionStatsDTO> getUserMovieStats(@RequestHeader("Authorization") String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            throw new InvalidTokenException("Token is missing or invalid.");
+        }
+        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new UserWithNameNotFoundException(currentUsername));
+        MovieCollectionStatsDTO stats = collectionService.getCollectionStats(currentUser.getId());
         return ResponseEntity.ok(stats);
     }
 
@@ -118,7 +125,7 @@ public class CollectionController {
             summary = "Get information about physical versions"
     )
     @PreAuthorize("hasRole('USER')")
-    @GetMapping("/physical-versions")
+    @GetMapping("/physical")
     public ResponseEntity<List<PhysicalVersionDTO>> getPhysicalVersions() {
         List<PhysicalVersionDTO> physicalVersions = dbService.getPhysicalVersions();
         return ResponseEntity.ok(physicalVersions);

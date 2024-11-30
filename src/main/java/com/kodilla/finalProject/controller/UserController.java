@@ -1,10 +1,9 @@
 package com.kodilla.finalProject.controller;
 
+import com.kodilla.finalProject.domain.User;
 import com.kodilla.finalProject.domain.UserDTO;
-import com.kodilla.finalProject.errorHandling.EmailExistsException;
-import com.kodilla.finalProject.errorHandling.RoleWithNameNotFoundException;
-import com.kodilla.finalProject.errorHandling.UserWithIdNotFoundException;
-import com.kodilla.finalProject.errorHandling.UsernameExistsException;
+import com.kodilla.finalProject.errorHandling.*;
+import com.kodilla.finalProject.repository.UserRepository;
 import com.kodilla.finalProject.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -22,6 +22,7 @@ import javax.validation.Valid;
 @Tag(name = "Users", description = "Managing users")
 public class UserController {
     private final UserService userService;
+    private final UserRepository userRepository;
 
     @Operation(description = "Registers a new user with the provided username, email, and other details",
             summary = "Create a new user"
@@ -36,9 +37,15 @@ public class UserController {
             summary = "Delete user")
 
     @PreAuthorize("hasRole('USER')")
-    @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long userId){
-        boolean isDeleted = userService.deleteUserById(userId);
+    @DeleteMapping("/delete")
+    public ResponseEntity<Void> deleteUser(@RequestHeader("Authorization") String authorizationHeader){
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            throw new InvalidTokenException("Token is missing or invalid.");
+        }
+        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new UserWithNameNotFoundException(currentUsername));
+        boolean isDeleted = userService.deleteUserById(currentUser.getId());
         if(isDeleted){
             return ResponseEntity.noContent().build();
         } else {
@@ -49,14 +56,31 @@ public class UserController {
             summary = "Update user")
 
     @PreAuthorize("hasRole('USER')")
-    @PutMapping("/{userId}")
-    public ResponseEntity<String> updateUser(@PathVariable Long userId, @RequestBody UserDTO userDTO) throws UsernameExistsException, EmailExistsException, RoleWithNameNotFoundException {
+    @PutMapping("/update")
+    public ResponseEntity<String> updateUser(@RequestHeader("Authorization") String authorizationHeader, @RequestBody UserDTO userDTO) throws UsernameExistsException, EmailExistsException, RoleWithNameNotFoundException {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            throw new InvalidTokenException("Token is missing or invalid.");
+        }
+        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new UserWithNameNotFoundException(currentUsername));
         try {
-            userService.updateUser(userId, userDTO, false);
+            userService.updateUser(currentUser.getId(), userDTO, false);
             return ResponseEntity.ok("Your data has been updated");
         } catch (UserWithIdNotFoundException | RoleWithNameNotFoundException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/user")
+    public ResponseEntity<UserDTO> getUserById(@RequestHeader("Authorization") String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            throw new InvalidTokenException("Token is missing or invalid.");
+        }
+        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new UserWithNameNotFoundException(currentUsername));
+        return ResponseEntity.ok(userService.getUserById(currentUser.getId()));
     }
 }
 
