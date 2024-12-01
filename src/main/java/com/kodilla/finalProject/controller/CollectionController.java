@@ -2,14 +2,12 @@ package com.kodilla.finalProject.controller;
 
 import com.kodilla.finalProject.domain.*;
 import com.kodilla.finalProject.errorHandling.InvalidTokenException;
-import com.kodilla.finalProject.errorHandling.MovieExistsException;
 import com.kodilla.finalProject.errorHandling.MovieNotFoundException;
 import com.kodilla.finalProject.errorHandling.UserWithNameNotFoundException;
 import com.kodilla.finalProject.mapper.CollectionMapper;
 import com.kodilla.finalProject.repository.UserRepository;
 import com.kodilla.finalProject.service.CollectionService;
 import com.kodilla.finalProject.service.DbService;
-import com.kodilla.finalProject.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

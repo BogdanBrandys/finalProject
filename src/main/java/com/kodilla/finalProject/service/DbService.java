@@ -66,73 +66,58 @@ public class DbService {
     }
 
     public void updatePhysicalVersion(Long movieId, PhysicalVersionDTO physicalVersionDto) throws MovieNotFoundException {
-        // Pobranie nazwy aktualnie zalogowanego użytkownika
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new UserWithNameNotFoundException(currentUsername));
 
-        // Znalezienie filmu w ulubionych użytkownika na podstawie movieId
         Movie movie = currentUser.getFavoriteMovies().stream()
                 .filter(favMovie -> favMovie.getId().equals(movieId))
                 .findFirst()
                 .orElseThrow(() -> new MovieNotFoundException(movieId));
 
-        // Sprawdzenie, czy fizyczna wersja już istnieje
         Optional<UserMovie> existingUserMovieOptional = userMovieRepository.findByUserAndMovie(currentUser, movie);
 
         if (existingUserMovieOptional.isPresent()) {
-            // Jeśli fizyczna wersja już istnieje, aktualizujemy jej dane
             UserMovie existingUserMovie = existingUserMovieOptional.get();
             PhysicalVersion existingPhysicalVersion = existingUserMovie.getPhysicalVersion();
 
             if (existingPhysicalVersion != null) {
-                // Aktualizacja fizycznej wersji, jeśli już istnieje
                 existingPhysicalVersion.setDescription(physicalVersionDto.getDescription());
                 existingPhysicalVersion.setReleaseYear(physicalVersionDto.getReleaseYear());
                 existingPhysicalVersion.setSteelbook(physicalVersionDto.getSteelbook());
                 existingPhysicalVersion.setDetails(physicalVersionDto.getDetails());
 
-                // Zapisanie zaktualizowanej fizycznej wersji
                 physicalVersionRepository.save(existingPhysicalVersion);
             } else {
-                // Jeśli nie ma fizycznej wersji, tworzymy nową
                 PhysicalVersion newPhysicalVersion = new PhysicalVersion();
                 newPhysicalVersion.setDescription(physicalVersionDto.getDescription());
                 newPhysicalVersion.setReleaseYear(physicalVersionDto.getReleaseYear());
                 newPhysicalVersion.setSteelbook(physicalVersionDto.getSteelbook());
                 newPhysicalVersion.setDetails(physicalVersionDto.getDetails());
 
-                // Tworzenie nowego UserMovie z fizyczną wersją
                 existingUserMovie.setPhysicalVersion(newPhysicalVersion);
 
-                // Zapisanie zaktualizowanego UserMovie
                 userMovieRepository.save(existingUserMovie);
 
-                // Zapisanie nowej fizycznej wersji
                 physicalVersionRepository.save(newPhysicalVersion);
             }
         } else {
-            // Jeśli fizyczna wersja nie istnieje, tworzymy nową
             PhysicalVersion physicalVersion = new PhysicalVersion();
             physicalVersion.setDescription(physicalVersionDto.getDescription());
             physicalVersion.setReleaseYear(physicalVersionDto.getReleaseYear());
             physicalVersion.setSteelbook(physicalVersionDto.getSteelbook());
             physicalVersion.setDetails(physicalVersionDto.getDetails());
 
-            // Tworzenie obiektu UserMovie i przypisanie fizycznej wersji
             UserMovie userMovie = new UserMovie();
             userMovie.setUser(currentUser);
             userMovie.setMovie(movie);
             userMovie.setPhysicalVersion(physicalVersion);
 
-            // Zapisanie nowego UserMovie
             userMovieRepository.save(userMovie);
 
-            // Zapisanie fizycznej wersji
             physicalVersionRepository.save(physicalVersion);
         }
 
-        // Publikowanie zdarzenia związane z dodaniem/aktualizowaniem fizycznej wersji
         userActionService.publishUserActionEvent(currentUser, ActionType.ADD_PHYSICAL_VERSION);
     }
 

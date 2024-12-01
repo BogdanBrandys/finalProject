@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MovieProviderDTO {
-
     private String provider_name;
     private MovieProvider.AccessType accessType;
 }

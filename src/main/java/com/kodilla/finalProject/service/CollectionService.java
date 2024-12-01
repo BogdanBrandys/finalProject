@@ -7,6 +7,7 @@ import com.kodilla.finalProject.errorHandling.UserWithIdNotFoundException;
 import com.kodilla.finalProject.errorHandling.UserWithNameNotFoundException;
 import com.kodilla.finalProject.event.ActionType;
 import com.kodilla.finalProject.mapper.CollectionMapper;
+import com.kodilla.finalProject.repository.UserMovieRepository;
 import com.kodilla.finalProject.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 public class CollectionService {
 
     private final UserRepository userRepository;
+    private final UserMovieRepository userMovieRepository;
     private final UserActionService userActionService;
     private final CollectionMapper collectionMapper;
     private final DbService dbService;
@@ -87,18 +89,14 @@ public class CollectionService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserWithNameNotFoundException(username));
 
-        // Get the favorite movies list
         List<Movie> favoriteMovies = user.getFavoriteMovies();
 
-        // Find the movie to remove
         boolean movieRemoved = favoriteMovies.removeIf(movie -> movie.getId().equals(id));
 
-        // If no movie was removed, throw exception
         if (!movieRemoved) {
             throw new MovieNotFoundException(id);
         }
 
-        // Save the updated user to persist the changes
         userRepository.save(user);
         userActionService.publishUserActionEvent(user, ActionType.REMOVE_FROM_FAVORITES);
         return true;

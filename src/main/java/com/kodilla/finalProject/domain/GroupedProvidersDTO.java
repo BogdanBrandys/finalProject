@@ -6,7 +6,6 @@ import java.util.List;
 
 @Data
 public class GroupedProvidersDTO {
-
     private List<MovieProviderDTO> rental;
     private List<MovieProviderDTO> subscription;
     private List<MovieProviderDTO> purchase;

@@ -7,7 +7,6 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class MovieBasicDTO {
-
         private Long id;
         private String title;
         private String release_date;

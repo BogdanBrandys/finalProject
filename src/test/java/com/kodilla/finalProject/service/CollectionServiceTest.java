@@ -7,6 +7,7 @@ import com.kodilla.finalProject.errorHandling.UserWithIdNotFoundException;
 import com.kodilla.finalProject.errorHandling.UserWithNameNotFoundException;
 import com.kodilla.finalProject.event.ActionType;
 import com.kodilla.finalProject.mapper.CollectionMapper;
+import com.kodilla.finalProject.repository.PhysicalVersionRepository;
 import com.kodilla.finalProject.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,6 +31,9 @@ public class CollectionServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PhysicalVersionRepository physicalVersionRepository;
 
     @Mock
     private UserActionService userActionService;
@@ -237,26 +241,36 @@ public class CollectionServiceTest {
     }
 
     @Test
-    public void deleteMovieFromFavourites_shouldRemoveMovie() throws MovieNotFoundException, UserWithNameNotFoundException {
+    public void deleteMovieFromFavourites_shouldRemoveMovieAndPhysicalVersion() throws MovieNotFoundException, UserWithNameNotFoundException {
         // Given
         Long movieId = 1L;
+        String username = "testUser";
 
         User user = new User();
         user.setUsername(username);
         user.setFavoriteMovies(new ArrayList<>());
 
-        MovieDetails movieDetails = new MovieDetails();
-        movieDetails.setTitle("Movie Title");
-
         Movie movie = new Movie();
         movie.setId(movieId);
         movie.setTmdbId(123L);
-        movie.setDetails(movieDetails);
 
+        PhysicalVersion physicalVersion = new PhysicalVersion();
+        physicalVersion.setDescription("Test Physical Version");
+        physicalVersion.setReleaseYear(2024);
+        physicalVersion.setSteelbook(false);
+        physicalVersion.setDetails("Test details");
+
+        // relation with user
+        UserMovie userMovie = new UserMovie();
+        userMovie.setUser(user);
+        userMovie.setMovie(movie);
+        userMovie.setPhysicalVersion(physicalVersion);
+
+        // Add to favourites
         user.getFavoriteMovies().add(movie);
 
-        // When
-        when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+        //When
+        when(userRepository.findByUsername("testUser")).thenReturn(Optional.of(user));
         doNothing().when(userActionService).publishUserActionEvent(any(User.class), any(ActionType.class));
 
         boolean result = collectionService.deleteMovieFromFavourites(movieId);
@@ -266,8 +280,9 @@ public class CollectionServiceTest {
         assertFalse(user.getFavoriteMovies().contains(movie));
         verify(userRepository).save(user);
         verify(userActionService).publishUserActionEvent(user, ActionType.REMOVE_FROM_FAVORITES);
-    }
 
+        verify(physicalVersionRepository, times(0)).findById(anyLong());
+    }
     @Test
     public void deleteMovieFromFavourites_shouldThrowMovieNotFoundException() {
         // Given
