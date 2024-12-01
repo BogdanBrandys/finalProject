@@ -5,6 +5,7 @@ import com.kodilla.finalProject.errorHandling.*;
 import com.kodilla.finalProject.event.ActionType;
 import com.kodilla.finalProject.mapper.UserMapper;
 import com.kodilla.finalProject.repository.RoleRepository;
+import com.kodilla.finalProject.repository.UserMovieRepository;
 import com.kodilla.finalProject.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UserMovieRepository userMovieRepository;
     private final RoleRepository roleRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
@@ -129,6 +131,10 @@ public class UserService {
         }
         User user = userOptional.get();
 
+        for (UserMovie userMovie : user.getUserMovies()) {
+            userMovie.setUser(null);  // Odłączamy użytkownika od filmu
+            userMovieRepository.save(userMovie);  // Zapisujemy zmiany w bazie
+        }
         userRepository.deleteById(userId);
 
         userActionService.publishUserActionEvent(user, ActionType.DELETE_PROFILE);

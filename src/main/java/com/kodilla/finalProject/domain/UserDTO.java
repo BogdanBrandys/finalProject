@@ -5,10 +5,12 @@ import lombok.Data;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @AllArgsConstructor
+@NoArgsConstructor
 @Data
 public class UserDTO {
     @NotBlank(message = "firstname is required")

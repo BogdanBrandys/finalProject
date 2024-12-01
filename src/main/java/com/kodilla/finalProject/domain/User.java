@@ -35,7 +35,7 @@ public class User {
     )
     private List<Movie> favoriteMovies;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.PERSIST)
     private List<UserMovie> userMovies;
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -48,6 +48,15 @@ public class User {
 
     public enum UserStatus {
         ACTIVE, BLOCKED
+    }
+    public void addUserMovie(UserMovie userMovie) {
+        userMovies.add(userMovie);
+        userMovie.setUser(this);
+    }
+
+    public void removeUserMovie(UserMovie userMovie) {
+        userMovies.remove(userMovie);
+        userMovie.setUser(null);
     }
 }
 

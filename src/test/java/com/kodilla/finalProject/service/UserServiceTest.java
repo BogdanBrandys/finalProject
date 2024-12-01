@@ -22,6 +22,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -66,6 +67,7 @@ class UserServiceTest {
         user.setFirst_name(userDto.getFirst_name());
         user.setLast_name(userDto.getLast_name());
         user.setPassword(userDto.getPassword());
+        user.setUserMovies(new ArrayList<>());
         user.setStatus(User.UserStatus.ACTIVE);
     }
 
