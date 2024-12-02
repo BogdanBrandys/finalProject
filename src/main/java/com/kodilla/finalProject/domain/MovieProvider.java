@@ -21,7 +21,7 @@ public class MovieProvider {
     @Enumerated(EnumType.STRING)
     private AccessType accessType;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "movies_id", referencedColumnName = "id", nullable = false)
     private Movie movie;
 

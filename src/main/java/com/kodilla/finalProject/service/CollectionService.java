@@ -58,7 +58,7 @@ public class CollectionService {
 
         List<Movie> movies = user.getFavoriteMovies();
         Movie movie = movies.stream()
-                .filter(m -> m.getId().equals(id))
+                .filter(m -> m.getId() != null && m.getId().equals(id))
                 .findFirst()
                 .orElseThrow(() -> new MovieNotFoundException(id));
 

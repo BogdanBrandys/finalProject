@@ -1,6 +1,5 @@
 package com.kodilla.finalProject.controller;
 
-import com.kodilla.finalProject.service.CollectionService;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 
